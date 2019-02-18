@@ -10,23 +10,17 @@ import math
 import matplotlib.pyplot as plt
 import numpy as np
 
-#walls
-RIGHT = 11
-LEFT = 0
-UP = 11
-DOWN = 0
-
 pi =  3.141592653589793
-point = [3,3]
+point = [8,4]
 
 #********laser scanner parameters
 #angle limits 
 MIN_ANGLE = 0
-MAX_ANGLE = 4*pi/2
+MAX_ANGLE = 3*pi/2
 #minimum range in units
 MIN_RANGE=0
 #max range in unites
-MAX_RANGE=100
+MAX_RANGE=8
 #measure of resolution. Degrees between adjecent scan rays
 INCREMENT = 0.03
 #*********************************
@@ -44,14 +38,25 @@ turt4 = [[6,5],[6,6]]
 
 lines = [line1,line2,line3,line4,turt1,turt2,turt3,turt4]
 
-pts = get_points_thetas(point,lines)
-points = []
-points.append(point)
-for pt in pts:
-    if (pt[1] != -1):
-        points.append(pt[1])
-points = np.array(points)
-plt.scatter(points[:,0],points[:,1])
+
+
+def get_theta_dists_and_plot(is_plot):
+    pts = get_points_thetas(point,lines)
+    points = []
+    points.append(point)
+    theta_dists = []
+    for pt in pts:
+        if (pt[1] != -1):
+            points.append(pt[1][0])
+            theta_dists.append([pt[0],pt[1][1]])
+        else:
+            theta_dists.append([pt[0],pt[1]])
+    points = np.array(points)
+    if(is_plot):
+        plt.scatter(points[:,0],points[:,1])
+    return theta_dists
+    
+
     
 
 def get_points_thetas(point,lines):
@@ -78,7 +83,7 @@ def get_closest_valid_point(point,theta,lines):
         min_ind = dists.index(min(dists))  
         #check if this is within scanner limits
         if ((min(dists) >= MIN_RANGE) and (min(dists) <= MAX_RANGE)):
-            return points[min_ind]
+            return [points[min_ind],min(dists)]
         else:
             return -1
     else:
@@ -144,12 +149,6 @@ def check_point_in(point1,point2,point):
             return True
     return False
 
-margin = 0.0
-def is_in(x,y):
-    if ((x > (RIGHT-margin)) or (x < (LEFT+margin)) or (y > (UP-margin)) or (y < (DOWN+margin))):
-        return False
-    return True
-
 def get_intersection(a,b,theta,a1,b1,a2,b2):
     tan_theta=0
     lamb=0
@@ -165,25 +164,25 @@ def get_intersection(a,b,theta,a1,b1,a2,b2):
     y = 0
     #both lines parallel to y
     if((abs(theta - pi/2) < 0.001) and (abs(a2-a1) < 0.01)):
-        print("scanner parallel to y and other line paralle to y")
+        #print("scanner parallel to y and other line paralle to y")
         return -1
     #just the other line parallel to y
     elif(abs(a2-a1) < 0.01):
-        print("just the other line paralle to y")
+        #print("just the other line paralle to y")
         x = a1
         y = (a1-a)*tan_theta + b
         return x,y
     #just hte scanner parallel ot y
     elif(abs(theta - pi/2) < 0.001):
-        print("just the scanner parallel ot y")
+        #print("just the scanner parallel ot y")
         x = a
         y = lamb*(a-a2) + b2
         return x,y
     else:
-        print("no line is paralle to y")
+        #print("no line is paralle to y")
         #both lines parallel to x axis
         if((abs(tan_theta) < 0.01) and (abs(lamb) < 0.01)):
-            print("both lines are parallel to x axis")
+            #print("both lines are parallel to x axis")
             return -1
         else:
             #lines are of equal gradient
@@ -197,10 +196,9 @@ def get_intersection(a,b,theta,a1,b1,a2,b2):
                 y=b2
                 x=(b2-b)/tan_theta + a
                 return x,y
-            print("at least one line is not paralle to x and no line is parallel to y")
-            print(tan_theta)
-            print(lamb)
-            print("this!!!!")
+            #print("at least one line is not paralle to x and no line is parallel to y")
+            #print(tan_theta)
+            #print(lamb)
             x = (b2-b-lamb*a2 + a*tan_theta)/(tan_theta - lamb)
             y = lamb * (x - a2) + b2
             return x,y
